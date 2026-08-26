@@ -1,0 +1,730 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Retail Payment Economics — Interactive Model</title>
+    <style>
+        :root {
+            --bg-color: #f8fafc;
+            --card-bg: #ffffff;
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+            --border-color: #e2e8f0;
+            --primary: #2563eb;
+            --primary-hover: #1d4ed8;
+            --accent-green: #10b981;
+            --accent-amber: #f59e0b;
+            --accent-red: #ef4444;
+            
+            /* Payment Method Colors */
+            --color-credit: #3b82f6;
+            --color-debit: #06b6d4;
+            --color-upi: #10b981;
+            --color-cash: #f59e0b;
+            --color-other: #8b5cf6;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            padding: 24px;
+            line-height: 1.5;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        /* Header */
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: var(--card-bg);
+            padding: 20px 24px;
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+        }
+
+        .header-title h1 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--text-main);
+        }
+
+        .header-title p {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .market-toggle {
+            display: flex;
+            background: #f1f5f9;
+            padding: 4px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+        }
+
+        .toggle-btn {
+            border: none;
+            background: none;
+            padding: 8px 16px;
+            font-size: 0.875rem;
+            font-weight: 600;
+            border-radius: 6px;
+            cursor: pointer;
+            color: var(--text-muted);
+            transition: all 0.2s ease;
+        }
+
+        .toggle-btn.active {
+            background: var(--card-bg);
+            color: var(--primary);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        /* Layout Grid */
+        .grid-layout {
+            display: grid;
+            grid-template-columns: 360px 1fr;
+            gap: 24px;
+        }
+
+        @media (max-width: 900px) {
+            .grid-layout {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Cards */
+        .card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 12px;
+        }
+
+        .card-header h2 {
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+
+        /* Controls */
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .control-label {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        .control-label span.val {
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        input[type="range"] {
+            width: 100%;
+            accent-color: var(--primary);
+            cursor: pointer;
+        }
+
+        input[type="number"] {
+            width: 100%;
+            padding: 8px 12px;
+            border-radius: 6px;
+            border: 1px solid var(--border-color);
+            font-size: 0.9rem;
+        }
+
+        /* Method Mix Sliders */
+        .mix-item {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .mix-label {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        /* Headline KPIs */
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+        }
+
+        @media (max-width: 700px) {
+            .kpi-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        .kpi-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .kpi-card.highlight {
+            border-color: var(--primary);
+            background: #eff6ff;
+        }
+
+        .kpi-title {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            font-weight: 700;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .kpi-value {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: var(--text-main);
+        }
+
+        .kpi-card.highlight .kpi-value {
+            color: var(--primary);
+        }
+
+        .kpi-sub {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        /* Stacked Bar */
+        .stacked-bar-container {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .stacked-bar {
+            display: flex;
+            height: 24px;
+            border-radius: 6px;
+            overflow: hidden;
+            background: #e2e8f0;
+        }
+
+        .bar-segment {
+            height: 100%;
+            transition: width 0.3s ease;
+        }
+
+        .bar-legend {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            font-size: 0.75rem;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .legend-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+        }
+
+        /* Decomposition */
+        .decomp-bar {
+            display: flex;
+            height: 16px;
+            border-radius: 4px;
+            overflow: hidden;
+            background: #e2e8f0;
+            margin-top: 4px;
+        }
+
+        /* Insight Box */
+        .insight-box {
+            background: #f0fdf4;
+            border: 1px solid #bbf7d0;
+            border-radius: 8px;
+            padding: 14px 16px;
+            font-size: 0.875rem;
+            color: #166534;
+            line-height: 1.4;
+        }
+
+        /* Tables & Advanced Controls */
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.85rem;
+        }
+
+        .data-table th, .data-table td {
+            padding: 8px 12px;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .data-table th {
+            background: #f8fafc;
+            color: var(--text-muted);
+            font-weight: 600;
+        }
+
+        .data-table input[type="number"] {
+            padding: 4px 8px;
+            font-size: 0.8rem;
+        }
+
+        /* Mode Toggle Link */
+        .mode-toggle-link {
+            background: none;
+            border: none;
+            color: var(--primary);
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            text-align: left;
+            padding: 0;
+            text-decoration: underline;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <!-- Header -->
+    <header>
+        <div class="header-title">
+            <h1>Retail Payment Economics</h1>
+            <p>How much of retail profit is consumed by payment acceptance?</p>
+        </div>
+        <div class="market-toggle">
+            <button class="toggle-btn active" id="btn-us" onclick="setMarket('US')">🇺🇸 US</button>
+            <button class="toggle-btn" id="btn-in" onclick="setMarket('India')">🇮🇳 India</button>
+        </div>
+    </header>
+
+    <!-- Headline KPI Cards -->
+    <div class="kpi-grid">
+        <div class="kpi-card highlight">
+            <span class="kpi-title">Payment Cost / Net Profit</span>
+            <span class="kpi-value" id="kpi-profit-share">0.0%</span>
+            <span class="kpi-sub">Primary Metric</span>
+        </div>
+        <div class="kpi-card">
+            <span class="kpi-title">Weighted Payment Cost</span>
+            <span class="kpi-value" id="kpi-weighted-cost">0.00%</span>
+            <span class="kpi-sub">Of Total Sales Value</span>
+        </div>
+        <div class="kpi-card">
+            <span class="kpi-title">Annual Payment Cost</span>
+            <span class="kpi-value" id="kpi-annual-cost">$0</span>
+            <span class="kpi-sub" id="kpi-annual-cost-sub">Absolute Annual Scale</span>
+        </div>
+        <div class="kpi-card">
+            <span class="kpi-title">Annual Net Profit</span>
+            <span class="kpi-value" id="kpi-annual-profit">$0</span>
+            <span class="kpi-sub" id="kpi-annual-profit-sub">At Selected Margin</span>
+        </div>
+    </div>
+
+    <!-- Main Content Layout -->
+    <div class="grid-layout">
+        
+        <!-- Controls Sidebar -->
+        <div class="card">
+            <div class="card-header">
+                <h2>Retailer Economics</h2>
+            </div>
+            
+            <div class="control-group">
+                <div class="control-label">
+                    <span>Net Profit Margin</span>
+                    <span class="val" id="lbl-margin">3.0%</span>
+                </div>
+                <input type="range" id="input-margin" min="0.5" max="10.0" step="0.1" value="3.0" oninput="updateCalculations()">
+            </div>
+
+            <div class="control-group">
+                <div class="control-label">
+                    <span>Average Ticket Size</span>
+                    <span class="val" id="lbl-ticket">$50</span>
+                </div>
+                <input type="range" id="input-ticket" min="5" max="500" step="5" value="50" oninput="updateCalculations()">
+            </div>
+
+            <div class="card-header" style="margin-top: 10px;">
+                <h2>Payment Mix (% Value)</h2>
+                <span style="font-size: 0.75rem; font-weight: 700; color: var(--primary);" id="lbl-mix-total">100%</span>
+            </div>
+
+            <!-- Payment Mix Sliders -->
+            <div class="mix-item">
+                <div class="mix-label"><span>Credit Card</span><span id="lbl-mix-credit">50%</span></div>
+                <input type="range" id="slider-credit" min="0" max="100" value="50" oninput="handleMixChange('credit')">
+            </div>
+            <div class="mix-item">
+                <div class="mix-label"><span>Debit Card</span><span id="lbl-mix-debit">30%</span></div>
+                <input type="range" id="slider-debit" min="0" max="100" value="30" oninput="handleMixChange('debit')">
+            </div>
+            <div class="mix-item" id="mix-group-upi">
+                <div class="mix-label"><span>UPI</span><span id="lbl-mix-upi">0%</span></div>
+                <input type="range" id="slider-upi" min="0" max="100" value="0" oninput="handleMixChange('upi')">
+            </div>
+            <div class="mix-item">
+                <div class="mix-label"><span>Cash</span><span id="lbl-mix-cash">15%</span></div>
+                <input type="range" id="slider-cash" min="0" max="100" value="15" oninput="handleMixChange('cash')">
+            </div>
+            <div class="mix-item">
+                <div class="mix-label"><span>Wallet / Other</span><span id="lbl-mix-other">5%</span></div>
+                <input type="range" id="slider-other" min="0" max="100" value="5" oninput="handleMixChange('other')">
+            </div>
+
+            <button class="mode-toggle-link" id="btn-toggle-advanced" onclick="toggleAdvancedMode()">⚙ Show Advanced Assumptions</button>
+        </div>
+
+        <!-- Visualizations & Outputs -->
+        <div style="display: flex; flex-direction: column; gap: 24px;">
+            
+            <!-- Payment Mix Visual Bar -->
+            <div class="card">
+                <div class="card-header">
+                    <h2>Payment Mix Breakdown</h2>
+                </div>
+                <div class="stacked-bar-container">
+                    <div class="stacked-bar">
+                        <div class="bar-segment" id="seg-credit" style="background: var(--color-credit); width: 50%;"></div>
+                        <div class="bar-segment" id="seg-debit" style="background: var(--color-debit); width: 30%;"></div>
+                        <div class="bar-segment" id="seg-upi" style="background: var(--color-upi); width: 0%;"></div>
+                        <div class="bar-segment" id="seg-cash" style="background: var(--color-cash); width: 15%;"></div>
+                        <div class="bar-segment" id="seg-other" style="background: var(--color-other); width: 5%;"></div>
+                    </div>
+                    <div class="bar-legend">
+                        <div class="legend-item"><div class="legend-dot" style="background: var(--color-credit);"></div> Credit</div>
+                        <div class="legend-item"><div class="legend-dot" style="background: var(--color-debit);"></div> Debit</div>
+                        <div class="legend-item" id="legend-upi"><div class="legend-dot" style="background: var(--color-upi);"></div> UPI</div>
+                        <div class="legend-item"><div class="legend-dot" style="background: var(--color-cash);"></div> Cash</div>
+                        <div class="legend-item"><div class="legend-dot" style="background: var(--color-other);"></div> Other</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Dynamic Insight Box -->
+            <div class="insight-box" id="insight-text">
+                At a 3.0% net margin, the modeled payment cost of 1.06% of revenue consumes 35.3% of net profit.
+            </div>
+
+            <!-- Cost Decomposition -->
+            <div class="card">
+                <div class="card-header">
+                    <h2>Variable vs Fixed Cost Contribution</h2>
+                </div>
+                <div style="display: flex; justify-content: space-between; font-size: 0.875rem;">
+                    <span>Variable Costs: <strong id="lbl-decomp-var">0 bps</strong> (<span id="lbl-decomp-var-pct">0%</span>)</span>
+                    <span>Fixed Costs: <strong id="lbl-decomp-fix">0 bps</strong> (<span id="lbl-decomp-fix-pct">0%</span>)</span>
+                </div>
+                <div class="decomp-bar">
+                    <div id="bar-decomp-var" style="background: var(--primary); width: 80%;"></div>
+                    <div id="bar-decomp-fix" style="background: var(--accent-amber); width: 20%;"></div>
+                </div>
+            </div>
+
+            <!-- Advanced Inputs Section -->
+            <div class="card hidden" id="advanced-card">
+                <div class="card-header">
+                    <h2>Advanced Method Assumptions</h2>
+                </div>
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Method</th>
+                            <th>Variable Cost (bps)</th>
+                            <th>Fixed Cost / Txn</th>
+                            <th>Effective Cost</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Credit Card</td>
+                            <td><input type="number" id="adv-var-credit" step="5" onchange="updateCalculations()"></td>
+                            <td><input type="number" id="adv-fix-credit" step="0.01" onchange="updateCalculations()"></td>
+                            <td id="adv-eff-credit">0.00%</td>
+                        </tr>
+                        <tr>
+                            <td>Debit Card</td>
+                            <td><input type="number" id="adv-var-debit" step="5" onchange="updateCalculations()"></td>
+                            <td><input type="number" id="adv-fix-debit" step="0.01" onchange="updateCalculations()"></td>
+                            <td id="adv-eff-debit">0.00%</td>
+                        </tr>
+                        <tr id="row-adv-upi">
+                            <td>UPI</td>
+                            <td><input type="number" id="adv-var-upi" step="5" onchange="updateCalculations()"></td>
+                            <td><input type="number" id="adv-fix-upi" step="0.01" onchange="updateCalculations()"></td>
+                            <td id="adv-eff-upi">0.00%</td>
+                        </tr>
+                        <tr>
+                            <td>Cash</td>
+                            <td><input type="number" id="adv-var-cash" step="5" onchange="updateCalculations()"></td>
+                            <td><input type="number" id="adv-fix-cash" step="0.01" onchange="updateCalculations()"></td>
+                            <td id="adv-eff-cash">0.00%</td>
+                        </tr>
+                        <tr>
+                            <td>Wallet / Other</td>
+                            <td><input type="number" id="adv-var-other" step="5" onchange="updateCalculations()"></td>
+                            <td><input type="number" id="adv-fix-other" step="0.01" onchange="updateCalculations()"></td>
+                            <td id="adv-eff-other">0.00%</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <div class="control-group" style="margin-top: 10px;">
+                    <label class="control-label">Annual Revenue Benchmark</label>
+                    <input type="number" id="adv-revenue" value="100000000" onchange="updateCalculations()">
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<script>
+    // System State
+    let currentMarket = 'US';
+    
+    // Default Profiles
+    const defaults = {
+        US: {
+            currency: '$',
+            ticket: 50,
+            margin: 3.0,
+            ticketMin: 5, ticketMax: 500, ticketStep: 5,
+            mix: { credit: 50, debit: 30, upi: 0, cash: 15, other: 5 },
+            rates: {
+                credit: { var: 160, fix: 0.10 },
+                debit:  { var: 70,  fix: 0.05 },
+                upi:    { var: 0,   fix: 0.00 },
+                cash:   { var: 0,   fix: 0.02 },
+                other:  { var: 120, fix: 0.05 }
+            }
+        },
+        India: {
+            currency: '₹',
+            ticket: 1000,
+            margin: 3.0,
+            ticketMin: 100, ticketMax: 10000, ticketStep: 100,
+            mix: { credit: 20, debit: 5, upi: 60, cash: 12, other: 3 },
+            rates: {
+                credit: { var: 150, fix: 0.00 },
+                debit:  { var: 40,  fix: 0.00 },
+                upi:    { var: 0,   fix: 0.00 },
+                cash:   { var: 0,   fix: 0.50 },
+                other:  { var: 50,  fix: 0.00 }
+            }
+        }
+    };
+
+    let activeMix = { ...defaults.US.mix };
+
+    function setMarket(market) {
+        currentMarket = market;
+        document.getElementById('btn-us').classList.toggle('active', market === 'US');
+        document.getElementById('btn-in').classList.toggle('active', market === 'India');
+        
+        // Dynamic UI adjustment for UPI
+        const isIndia = market === 'India';
+        document.getElementById('mix-group-upi').classList.toggle('hidden', !isIndia);
+        document.getElementById('legend-upi').classList.toggle('hidden', !isIndia);
+        document.getElementById('row-adv-upi').classList.toggle('hidden', !isIndia);
+
+        // Reset inputs to market defaults
+        const def = defaults[market];
+        activeMix = { ...def.mix };
+
+        const ticketSlider = document.getElementById('input-ticket');
+        ticketSlider.min = def.ticketMin;
+        ticketSlider.max = def.ticketMax;
+        ticketSlider.step = def.ticketStep;
+        ticketSlider.value = def.ticket;
+
+        document.getElementById('input-margin').value = def.margin;
+
+        // Load rates into advanced panel
+        const keys = ['credit', 'debit', 'upi', 'cash', 'other'];
+        keys.forEach(k => {
+            document.getElementById(`adv-var-${k}`).value = def.rates[k].var;
+            document.getElementById(`adv-fix-${k}`).value = def.rates[k].fix;
+        });
+
+        syncSlidersUI();
+        updateCalculations();
+    }
+
+    function syncSlidersUI() {
+        const keys = ['credit', 'debit', 'upi', 'cash', 'other'];
+        keys.forEach(k => {
+            document.getElementById(`slider-${k}`).value = activeMix[k];
+            document.getElementById(`lbl-mix-${k}`).innerText = Math.round(activeMix[k]) + '%';
+        });
+    }
+
+    // Dynamic Slider Proportional Balancing Logic
+    function handleMixChange(changedKey) {
+        let keys = ['credit', 'debit', 'cash', 'other'];
+        if (currentMarket === 'India') keys.push('upi');
+
+        let val = parseFloat(document.getElementById(`slider-${changedKey}`).value);
+        activeMix[changedKey] = val;
+
+        let remainingSum = 0;
+        keys.filter(k => k !== changedKey).forEach(k => remainingSum += activeMix[k]);
+
+        let targetRemaining = 100 - val;
+
+        if (remainingSum > 0) {
+            keys.filter(k => k !== changedKey).forEach(k => {
+                activeMix[k] = (activeMix[k] / remainingSum) * targetRemaining;
+            });
+        } else {
+            let count = keys.length - 1;
+            keys.filter(k => k !== changedKey).forEach(k => {
+                activeMix[k] = targetRemaining / count;
+            });
+        }
+
+        syncSlidersUI();
+        updateCalculations();
+    }
+
+    function toggleAdvancedMode() {
+        const advCard = document.getElementById('advanced-card');
+        const btn = document.getElementById('btn-toggle-advanced');
+        advCard.classList.toggle('hidden');
+        btn.innerText = advCard.classList.contains('hidden') ? '⚙ Show Advanced Assumptions' : '⚙ Hide Advanced Assumptions';
+    }
+
+    function updateCalculations() {
+        const currency = defaults[currentMarket].currency;
+        const margin = parseFloat(document.getElementById('input-margin').value);
+        const ticket = parseFloat(document.getElementById('input-ticket').value);
+        const annualRev = parseFloat(document.getElementById('adv-revenue').value) || 100000000;
+
+        // Update Slider UI Labels
+        document.getElementById('lbl-margin').innerText = margin.toFixed(1) + '%';
+        document.getElementById('lbl-ticket').innerText = currency + ticket.toLocaleString();
+
+        const keys = ['credit', 'debit', 'upi', 'cash', 'other'];
+        let weightedVarBps = 0;
+        let weightedFixAmt = 0;
+
+        keys.forEach(k => {
+            let mixPct = (currentMarket === 'US' && k === 'upi') ? 0 : activeMix[k] / 100;
+            let varBps = parseFloat(document.getElementById(`adv-var-${k}`).value) || 0;
+            let fixAmt = parseFloat(document.getElementById(`adv-fix-${k}`).value) || 0;
+
+            weightedVarBps += mixPct * varBps;
+            weightedFixAmt += mixPct * fixAmt;
+
+            // Effective cost per method
+            let effCostPct = (varBps / 100) + ((fixAmt / ticket) * 100);
+            document.getElementById(`adv-eff-${k}`).innerText = effCostPct.toFixed(2) + '%';
+        });
+
+        // Core Mathematical Formulations
+        const weightedVarPct = weightedVarBps / 10000;
+        const weightedFixPct = ticket > 0 ? (weightedFixAmt / ticket) : 0;
+        const blendedCostPct = weightedVarPct + weightedFixPct;
+        const blendedCostBps = blendedCostPct * 10000;
+
+        const annualPaymentCost = annualRev * blendedCostPct;
+        const annualNetProfit = annualRev * (margin / 100);
+        
+        const costToProfitPct = margin > 0 ? (blendedCostPct / (margin / 100)) * 100 : 0;
+
+        // Render Primary KPIs
+        document.getElementById('kpi-profit-share').innerText = costToProfitPct.toFixed(1) + '%';
+        document.getElementById('kpi-weighted-cost').innerText = (blendedCostPct * 100).toFixed(2) + '%';
+        
+        document.getElementById('kpi-annual-cost').innerText = formatCurrency(annualPaymentCost, currency);
+        document.getElementById('kpi-annual-profit').innerText = formatCurrency(annualNetProfit, currency);
+
+        // Update Stacked Bar Widths
+        keys.forEach(k => {
+            let width = (currentMarket === 'US' && k === 'upi') ? 0 : activeMix[k];
+            document.getElementById(`seg-${k}`).style.width = width + '%';
+        });
+
+        // Update Variable vs Fixed Decomposition
+        const varBpsVal = weightedVarBps;
+        const fixBpsVal = weightedFixPct * 10000;
+        const totalBps = varBpsVal + fixBpsVal;
+
+        const varRatio = totalBps > 0 ? (varBpsVal / totalBps) * 100 : 100;
+        const fixRatio = totalBps > 0 ? (fixBpsVal / totalBps) * 100 : 0;
+
+        document.getElementById('lbl-decomp-var').innerText = varBpsVal.toFixed(1) + ' bps';
+        document.getElementById('lbl-decomp-var-pct').innerText = varRatio.toFixed(0) + '%';
+        document.getElementById('lbl-decomp-fix').innerText = fixBpsVal.toFixed(1) + ' bps';
+        document.getElementById('lbl-decomp-fix-pct').innerText = fixRatio.toFixed(0) + '%';
+
+        document.getElementById('bar-decomp-var').style.width = varRatio + '%';
+        document.getElementById('bar-decomp-fix').style.width = fixRatio + '%';
+
+        // Plain English Dynamic Insight Generation
+        const insightText = `At a <strong>${margin.toFixed(1)}%</strong> net profit margin, the modeled payment cost of <strong>${(blendedCostPct * 100).toFixed(2)}%</strong> of revenue consumes <strong>${costToProfitPct.toFixed(1)}%</strong> of net profit. Fixed costs contribute <strong>${fixBpsVal.toFixed(1)} bps</strong> to the total payment burden.`;
+        document.getElementById('insight-text').innerHTML = insightText;
+    }
+
+    function formatCurrency(val, symbol) {
+        if (val >= 1e9) return symbol + (val / 1e9).toFixed(2) + 'B';
+        if (val >= 1e6) return symbol + (val / 1e6).toFixed(2) + 'M';
+        if (val >= 1e3) return symbol + (val / 1e3).toFixed(0) + 'K';
+        return symbol + val.toFixed(0);
+    }
+
+    // Initial Load
+    setMarket('US');
+</script>
+</body>
+</html>
